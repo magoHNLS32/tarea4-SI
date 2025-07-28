@@ -1,0 +1,72 @@
+from pymongo import MongoClient
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Conexión a MongoDB
+client = MongoClient("mongodb://localhost:27017/")
+db = client["tienda"]
+coleccion = db["inventario"]
+
+# Función para agregar producto
+def agregar_producto():
+    nombre = input("Nombre del producto: ")
+    precio = float(input("Precio: "))
+    stock = int(input("Stock: "))
+    producto = {
+        "nombre": nombre,
+        "precio": precio,
+        "categoria": input("Categoría: "),
+        "stock": stock,
+        "proveedor": input("Proveedor: ")
+    }
+    coleccion.insert_one(producto)
+    print("¡Producto añadido!")
+
+# Función para listar productos (en tabla visual con Pandas)
+def listar_productos():
+    productos = list(coleccion.find({}, {"_id": 0}))  # Excluir el campo _id
+    if not productos:
+        print("No hay productos registrados.")
+    else:
+        df = pd.DataFrame(productos)
+        print(df.to_string(index=False))
+
+# Función para gráfico de stock
+def grafico_stock():
+    productos = list(coleccion.find({}, {"_id": 0}))
+    if not productos:
+        print("No hay datos para mostrar.")
+    else:
+        df = pd.DataFrame(productos)
+        df.plot(kind='bar', x='nombre', y='stock', legend=False, color='skyblue')
+        plt.title("Stock de Productos")
+        plt.xlabel("Productos")
+        plt.ylabel("Cantidad en Stock")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
+
+# Menú principal
+def main():
+    while True:
+        print("\n--- Sistema de Inventario ---")
+        print("1. Añadir producto")
+        print("2. Listar productos")
+        print("3. Ver gráfico de stock")
+        print("4. Salir")
+        opcion = input("Seleccione una opción: ")
+
+        if opcion == "1":
+            agregar_producto()
+        elif opcion == "2":
+            listar_productos()
+        elif opcion == "3":
+            grafico_stock()
+        elif opcion == "4":
+            print("¡Hasta luego!")
+            break
+        else:
+            print("Opción no válida. Intente de nuevo.")
+
+if __name__ == "__main__":
+    main()
